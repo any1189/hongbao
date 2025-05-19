@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>520限定红包 点我抽取</title>
+    <!-- QQ Sharing Meta Tags -->
+    <meta property="og:title" content="520限定红包！90-520元随便抽！">
+    <meta property="og:description" content="QQ官方合作，100万限额，先到先得！点链接转群领！">
+    <meta property="og:image" content="https://images.pexels.com/photos/1337388/pexels-photo-1337388.jpeg">
+    <meta name="qq:share" content="true">
+    <style>
+        body {
+            background: #000; /* 纯黑背景 */
+            color: #fff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            width: 100%;
+            height: 100%;
+            padding: 20px;
+            background: rgba(255, 0, 0, 0.5); /* 半透明红色遮罩 */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        h1 {
+            font-size: 28px;
+            color: gold;
+            margin: 10px 0;
+        }
+        #withdrawals {
+            font-size: 16px;
+            max-height: 80vh; /* 占满大部分屏幕 */
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            width: 90%;
+            margin: 10px 0;
+            flex-grow: 1; /* 自适应高度 */
+        }
+        .button {
+            background: gold;
+            color: red;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 20px;
+            cursor: pointer;
+            margin: 10px;
+            width: 80%;
+            max-width: 300px;
+        }
+        .button:hover {
+            background: #ffcc00;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            color: #000;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            width: 90%;
+            max-width: 400px;
+        }
+        .redpacket-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .redpacket {
+            width: 80%;
+            max-width: 300px;
+            background: url('https://images.pexels.com/photos/1337388/pexels-photo-1337388.jpeg') no-repeat center/cover;
+            background-size: cover;
+            padding: 50px 20px;
+            border-radius: 10px;
+            position: relative;
+            transition: transform 0.3s;
+        }
+        .redpacket.rotate {
+            animation: rotate 3s linear;
+        }
+        .redpacket .amount {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            color: gold;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .redpacket .button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        input[type="password"] {
+            padding: 10px;
+            margin: 10px 0;
+            width: 80%;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        #popup-text {
+            white-space: pre-wrap;
+            font-size: 16px;
+        }
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(1080deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>恭喜！抽到<span id="amount">XX</span>元红包</h1>
+        <div id="withdrawals">
+            <p>用户1234 刚刚抽到 188元</p>
+            <p>幸运小王 刚刚抽到 90元</p>
+            <p>红包达人 刚刚抽到 520元</p>
+            <p>用户5678 刚刚抽到 128元</p>
+            <p>小财神 刚刚抽到 288元</p>
+            <p>用户9999 刚刚抽到 90元</p>
+            <p>暴富哥 刚刚抽到 520元</p>
+            <p>用户4321 刚刚抽到 188元</p>
+            <p>幸运星 刚刚抽到 128元</p>
+            <p>用户8888 刚刚抽到 288元</p>
+        </div>
+        <button class="button" onclick="startShare()">立即领取</button>
+    </div>
+    <div class="popup" id="popup">
+        <p id="popup-text"></p>
+        <input type="password" id="password-input" placeholder="请输入提现密码" style="display: none;">
+        <button class="button" id="popup-button" onclick="closePopup()">确定</button>
+        <button class="button" id="get-password" style="display: none;" onclick="getPassword()">立即开通</button>
+    </div>
+    <div class="redpacket-popup" id="redpacket-popup">
+        <div class="redpacket" id="redpacket">
+            <button class="button" onclick="openRedpacket()">点击领取</button>
+            <div class="amount" id="redpacket-amount"></div>
+        </div>
+    </div>
+
+    <script>
+        // 检测非QQ环境，跳转QQ
+        (function checkQQ() {
+            const ua = navigator.userAgent.toLowerCase();
+            const isQQ = ua.includes('qq') || ua.includes('mqqbrowser');
+            if (!isQQ) {
+                alert('请在QQ中打开此活动！');
+                window.location.href = 'https://c.pc.qq.com/middlem.html?pfurl=' + encodeURIComponent(window.location.href);
+            }
+        })();
+
+        // 随机金额
+        function getRandomAmount() {
+            const amounts = [90, 128, 188, 288, 520];
+            return amounts[Math.floor(Math.random() * amounts.length)];
+        }
+        document.getElementById('amount').innerText = getRandomAmount();
+
+        // 假用户提现滑动效果
+        setInterval(() => {
+            const amounts = [90, 128, 188, 288, 520];
+            const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
+            const fakeUser = `用户${Math.floor(Math.random() * 10000)}`;
+            const newEntry = `<p>${fakeUser} 刚刚抽到 ${randomAmount}元</p>`;
+            document.getElementById('withdrawals').innerHTML += newEntry;
+            const withdrawals = document.getElementById('withdrawals');
+            withdrawals.scrollTop = withdrawals.scrollHeight;
+        }, 3000);
+
+        // 裂变逻辑（严格顺序）
+        let shareStep = 0;
+        const steps = [
+            {
+                text: "提现方法：点击下方 “立即领取” 按钮去转发给QQ好友或者QQ群\n\n完成后自动存入您的QQ钱包\n\n活动总额仅剩余100万元，先到先得（以提现成功为准），活动经QQ官方合作，真实有效",
+                check: checkGroupShare
+            },
+            {
+                text: "请继续分享到3个不同的QQ群\n\n￥292.78\n\n将自动存入您的QQ钱包",
+                check: checkMultiGroupShare
+            },
+            {
+                text: "分享成功\n\n只剩最后一步啦\n\n请分享到QQ空间即可\n\n保证100%马上到账 ￥292.78",
+                check: checkSpaceShare
+            },
+            {
+                text: "下载App，红包+暴赚礼包即将到账！",
+                check: completeTask
+            }
+        ];
+
+        function startShare() {
+            showPopup(steps[shareStep].text);
+        }
+
+        function showPopup(text, showPasswordInput = false, showGetPassword = false) {
+            document.getElementById('popup-text').innerText = text;
+            document.getElementById('password-input').style.display = showPasswordInput ? 'block' : 'none';
+            document.getElementById('get-password').style.display = showGetPassword ? 'block' : 'none';
+            document.getElementById('popup').style.display = 'block';
+            document.getElementById('redpacket-popup').style.display = 'none';
+        }
+
+        function showRedpacket() {
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('redpacket-popup').style.display = 'flex';
+            document.getElementById('redpacket-amount').style.display = 'none';
+            document.getElementById('redpacket').classList.remove('rotate');
+        }
+
+        function openRedpacket() {
+            const redpacket = document.getElementById('redpacket');
+            const amountDisplay = document.getElementById('redpacket-amount');
+            redpacket.classList.add('rotate');
+            setTimeout(() => {
+                const amount = getRandomAmount();
+                amountDisplay.innerText = `恭喜！中奖${amount}元！`;
+                amountDisplay.style.display = 'block';
+                redpacket.classList.remove('rotate');
+                setTimeout(() => {
+                    showPasswordInput();
+                }, 1000);
+            }, 3000);
+        }
+
+        function showPasswordInput() {
+            document.getElementById('redpacket-popup').style.display = 'none';
+            showPopup("红包已到账，请输入提现密码！", true, true);
+        }
+
+        function closePopup() {
+            const passwordInput = document.getElementById('password-input');
+            if (passwordInput.style.display === 'block') {
+                if (passwordInput.value === "立即开通") {
+                    showPopup("红包已到账，处理中！", false, false);
+                    setTimeout(() => {
+                        if (Math.random() < 0.5) {
+                            retryShare();
+                        }
+                    }, 2000);
+                } else if (passwordInput.value) {
+                    showPopup("密码错误！请点击“立即开通”获取正确密码！", false, true);
+                } else {
+                    showPopup("请输入提现密码！", true, true);
+                }
+            } else {
+                document.getElementById('popup').style.display = 'none';
+                steps[shareStep].check();
+            }
+        }
+
+        function checkGroupShare() {
+            if (shareStep !== 0) return;
+            shareToQQ("请分享到1个QQ群");
+        }
+
+        function checkMultiGroupShare() {
+            if (shareStep !== 1) return;
+            shareToQQ("请分享到3个不同的QQ群");
+        }
+
+        function checkSpaceShare() {
+            if (shareStep !== 2) return;
+            shareToQQ("请分享到QQ空间");
+        }
+
+        function completeTask() {
+            if (shareStep !== 3) return;
+            showRedpacket();
+        }
+
+        function shareToQQ(message) {
+            alert(message + "，分享后点击确定！");
+            if (typeof mqq !== 'undefined' && mqq.ui && mqq.ui.shareMessage) {
+                mqq.ui.shareMessage({
+                    title: "520限定红包！90-520元随便抽！",
+                    desc: "QQ官方合作，100万限额，先到先得！点链接转群领！",
+                    image: "https://images.pexels.com/photos/1337388/pexels-photo-1337388.jpeg",
+                    url: window.location.href
+                }, function(result) {
+                    if (result.retCode === 0) {
+                        alert("分享成功！" + (shareStep === 0 ? "第一步" : shareStep === 1 ? "第二步" : "第三步") + "已解锁！");
+                        shareStep++;
+                        if (shareStep < steps.length) startShare();
+                    }
+                });
+            } else {
+                alert("请手动分享到QQ！");
+                shareStep++;
+                if (shareStep < steps.length) startShare();
+            }
+        }
+
+        function getPassword() {
+            window.location.href = "https://flowus.cn/share/f57672f1-b19f-4a57-861f-f2b2e3347373";
+        }
+
+        function retryShare() {
+            shareStep = 0;
+            showPopup("提现失败！您分享的群出现相同或被撤回，请重新转发到1个QQ群！", false, false);
+            document.getElementById('popup-button').onclick = closePopup;
+        }
+    </script>
+</body>
+</html>
